@@ -1,0 +1,141 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+class Room {
+    private String roomNumber;
+    private RoomType roomType;
+    private double price;
+    private boolean available;
+
+    public Room(String roomNumber, RoomType roomType, double price) {
+        this.roomNumber = roomNumber;
+        this.roomType = roomType;
+        this.price = price;
+        this.available = true;
+    }
+
+    public String getRoomNumber() {
+        return roomNumber;
+    }
+
+    public RoomType getRoomType() {
+        return roomType;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
+}
+
+enum RoomType {
+    SINGLE, DOUBLE, SUITE
+}
+
+class Reservation {
+    private Room room;
+    private String guestName;
+    private int nights;
+    private double totalPrice;
+
+    public Reservation(Room room, String guestName, int nights) {
+        this.room = room;
+        this.guestName = guestName;
+        this.nights = nights;
+        this.totalPrice = nights * room.getPrice();
+    }
+
+    public String getGuestName() {
+        return guestName;
+    }
+
+    public double getTotalPrice() {
+        return totalPrice;
+    }
+}
+
+class HotelReservationSystem {
+    private Map<String, Room> rooms;
+    private List<Reservation> reservations;
+
+    public HotelReservationSystem() {
+        rooms = new HashMap<>();
+        reservations = new ArrayList<>();
+    }
+
+    public void addRoom(String roomNumber, RoomType roomType, double price) {
+        Room room = new Room(roomNumber, roomType, price);
+        rooms.put(roomNumber, room);
+    }
+
+    public List<Room> searchAvailableRooms(RoomType roomType) {
+        List<Room> availableRooms = new ArrayList<>();
+        for (Room room : rooms.values()) {
+            if (room.getRoomType() == roomType && room.isAvailable()) {
+                availableRooms.add(room);
+            }
+        }
+        return availableRooms;
+    }
+
+    public void makeReservation(String roomNumber, String guestName, int nights) {
+        Room room = rooms.get(roomNumber);
+        if (room != null && room.isAvailable()) {
+            Reservation reservation = new Reservation(room, guestName, nights);
+            reservations.add(reservation);
+            room.setAvailable(false);
+            System.out.printf("Reservation made for %s in room %s for %d nights.%n", guestName, roomNumber, nights);
+        } else {
+            System.out.println("Room is not available.");
+        }
+    }
+
+    public void processPayment(String guestName, double amount) {
+        for (Reservation reservation : reservations) {
+            if (reservation.getGuestName().equals(guestName)) {
+                if (amount >= reservation.getTotalPrice()) {
+                    System.out.printf("Payment of $%.2f processed for %s's reservation.%n", amount, guestName);
+                } else {
+                    System.out.printf("Insufficient payment. $%.2f more is needed for %s's reservation.%n", reservation.getTotalPrice() - amount, guestName);
+                }
+                return;
+            }
+        }
+        System.out.printf("No reservation found for %s.%n", guestName);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        HotelReservationSystem system = new HotelReservationSystem();
+
+        // Add rooms
+        system.addRoom("101", RoomType.SINGLE, 100.0);
+        system.addRoom("102", RoomType.DOUBLE, 150.0);
+        system.addRoom("201", RoomType.SUITE, 200.0);
+
+        // Search available rooms
+        List<Room> availableSingleRooms = system.searchAvailableRooms(RoomType.SINGLE);
+        System.out.println("Available Single Rooms:");
+        for (Room room : availableSingleRooms) {
+            System.out.printf("Room %s: $%.2f%n", room.getRoomNumber(), room.getPrice());
+        }
+
+        // Make reservations
+        system.makeReservation("101", "RAYAN", 2);
+        system.makeReservation("201", "KHAN", 3);
+
+        // Process payments
+        system.processPayment("RAYAN", 250.0);
+        system.processPayment("KHAN", 500.0);
+    }
+}
