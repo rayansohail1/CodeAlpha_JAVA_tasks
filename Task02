@@ -1,0 +1,124 @@
+import java.util.HashMap;
+import java.util.Map;
+
+class Stock {
+    private String symbol;
+    private double price;
+
+    public Stock(String symbol, double price) {
+        this.symbol = symbol;
+        this.price = price;
+    }
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    // Setter for price
+    public void setPrice(double price) {
+        this.price = price;
+    }
+}
+
+class Portfolio {
+    private Map<String, Integer> holdings;
+    private double cash;
+
+    public Portfolio() {
+        holdings = new HashMap<>();
+        cash = 10000.0; // Starting cash balance
+    }
+
+    public void buy(String symbol, int shares, double price) {
+        double cost = shares * price;
+        if (cash >= cost) {
+            holdings.merge(symbol, shares, Integer::sum);
+            cash -= cost;
+            System.out.printf("Bought %d shares of %s at $%.2f each.%n", shares, symbol, price);
+        } else {
+            System.out.println("Insufficient cash to complete the transaction.");
+        }
+    }
+
+    public void sell(String symbol, int shares, double price) {
+        if (holdings.getOrDefault(symbol, 0) >= shares) {
+            holdings.merge(symbol, -shares, Integer::sum);
+            cash += shares * price;
+            System.out.printf("Sold %d shares of %s at $%.2f each.%n", shares, symbol, price);
+        } else {
+            System.out.println("You don't have enough shares to sell.");
+        }
+    }
+
+    public double calculatePortfolioValue(Map<String, Stock> marketData) {
+        double portfolioValue = cash;
+        for (Map.Entry<String, Integer> holding : holdings.entrySet()) {
+            String symbol = holding.getKey();
+            int shares = holding.getValue();
+            double price = marketData.get(symbol).getPrice();
+            portfolioValue += shares * price;
+        }
+        return portfolioValue;
+    }
+}
+
+class StockTradingPlatform {
+    private Map<String, Stock> marketData;
+    private Portfolio portfolio;
+
+    public StockTradingPlatform() {
+        marketData = new HashMap<>();
+        portfolio = new Portfolio();
+    }
+
+    public void addStock(String symbol, double price) {
+        marketData.put(symbol, new Stock(symbol, price));
+    }
+
+    public void updateStockPrice(String symbol, double newPrice) {
+        marketData.get(symbol).setPrice(newPrice);
+    }
+
+    public void buy(String symbol, int shares) {
+        double price = marketData.get(symbol).getPrice();
+        portfolio.buy(symbol, shares, price);
+    }
+
+    public void sell(String symbol, int shares) {
+        double price = marketData.get(symbol).getPrice();
+        portfolio.sell(symbol, shares, price);
+    }
+
+    public double getPortfolioValue() {
+        return portfolio.calculatePortfolioValue(marketData);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        StockTradingPlatform platform = new StockTradingPlatform();
+
+        // Add some stocks to the market
+        platform.addStock("AAPL", 120.50);
+        platform.addStock("GOOGL", 2500.00);
+        platform.addStock("TSLA", 650.00);
+
+        // Buy and sell some stocks
+        platform.buy("AAPL", 50);
+        platform.buy("GOOGL", 10);
+        platform.sell("AAPL", 20);
+
+        // Update stock prices
+        platform.updateStockPrice("AAPL", 125.00);
+        platform.updateStockPrice("GOOGL", 2550.00);
+        platform.updateStockPrice("TSLA", 675.00);
+
+        // Calculate portfolio value
+        double portfolioValue = platform.getPortfolioValue();
+        System.out.printf("Portfolio Value: $%.2f%n", portfolioValue);
+    }
+}
